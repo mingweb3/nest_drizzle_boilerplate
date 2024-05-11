@@ -7,7 +7,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
-import { Reflector } from '@nestjs/core';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import PG_CONNECTION, { secret } from '@utils/urls';
 import * as schema from '@db/schema';
@@ -40,12 +39,7 @@ export class AuthGuard implements CanActivate {
         secret,
       ) as jwtPayload;
 
-      if (verified.id) {
-        const userExists = await this.usersService.findOne(verified.id);
-        if (userExists === undefined) {
-          return false;
-        }
-      } else {
+      if (!verified.id) {
         return false;
       }
     } catch (error) {
