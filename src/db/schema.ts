@@ -35,6 +35,7 @@ export const users = pgTable('Users', {
   id: serial('id').primaryKey(),
   email: varchar('email', { length: 256 }).unique().notNull(),
   password: varchar('password', { length: 60 }).notNull(),
+  username: varchar('username', { length: 80 }),
 });
 
 export const profiles = pgTable('Profiles', {

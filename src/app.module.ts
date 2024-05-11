@@ -5,10 +5,16 @@ import { ConfigModule } from '@nestjs/config/dist';
 import { appConfigService } from './config/config.service';
 import { envVarsSchema } from './config/validation.schema';
 import { DbModule } from './db/db.module';
+import { CommonModule } from './modules/common/common.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from '@modules/users/users.module';
 
 @Module({
   imports: [
     DbModule,
+    CommonModule,
+    AuthModule,
+    UsersModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath:

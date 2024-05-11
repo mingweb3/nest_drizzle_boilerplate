@@ -7,4 +7,5 @@ export const appConfigService = () => ({
   database: {
     uri: process.env.DATABASE_URI,
   },
+  secret: process.env.SECRET,
 });

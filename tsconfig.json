@@ -24,6 +24,9 @@
       "@config/*": [
         "src/config/*"
       ],
+      "@db/*": [
+        "src/db/*"
+      ],
       "@utils/*": [
         "src/utils/*"
       ],
