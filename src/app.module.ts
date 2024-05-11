@@ -4,9 +4,11 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config/dist';
 import { appConfigService } from './config/config.service';
 import { envVarsSchema } from './config/validation.schema';
+import { DbModule } from './db/db.module';
 
 @Module({
   imports: [
+    DbModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath:

@@ -1,7 +1,10 @@
-export interface AppConfig {
-  port: number | string;
+export interface DatabaseConfig {
+  uri: string;
 }
 
 export const appConfigService = () => ({
   port: Number(process.env.PORT),
+  database: {
+    uri: process.env.DATABASE_URI,
+  },
 });
