@@ -46,10 +46,11 @@ export class AuthService {
 
 		const user = await this.db
 			.insert(schema.users)
-			.values({ email, password: hashedPassword, username });
+			.values({ email, password: hashedPassword, username })
+			.returning();
 
-		const tokens = await this.getTokens(user.oid, email);
-		await this.updateRefreshToken(user.oid.toString(), tokens.refreshToken);
+		const tokens = await this.getTokens(user[0].id, email);
+		await this.updateRefreshToken(user[0].id, tokens.refreshToken);
 		return tokens;
 	}
 

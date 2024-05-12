@@ -1,3 +1,4 @@
+import { PartialType } from '@nestjs/mapped-types';
 import { IsNotEmpty, IsString } from 'class-validator';
 
 export class ProfileDto {
@@ -12,3 +13,5 @@ export class ProfileDto {
 	@IsNotEmpty()
 	userId: number;
 }
+
+export class UpdateProfileDto extends PartialType(ProfileDto) {}

@@ -40,16 +40,29 @@ export class UsersService {
 	}
 
 	async update(id: number, updateUserDto: UpdateUserDto) {
-		const userExists = this.findOne(id);
+		const userExists = await this.findOne(id);
 		if (!userExists) {
 			throw new BadRequestException(`no user exists`);
 		}
 
-		this.db
+		await this.db
 			.update(this.userTable)
 			.set(updateUserDto)
 			.where(eq(this.userTable.id, id));
 
 		return { status: 'updated' };
+	}
+
+	async delete(id: number) {
+		try {
+			await this.db
+				.delete(schema.profiles)
+				.where(eq(schema.profiles.userId, id));
+			await this.db.delete(this.userTable).where(eq(this.userTable.id, id));
+		} catch (e) {
+			console.log(e);
+			throw new BadRequestException(`Your data is invalid!`);
+		}
+		return { status: 'deleted' };
 	}
 }

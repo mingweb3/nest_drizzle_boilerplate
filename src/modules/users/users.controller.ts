@@ -2,6 +2,7 @@ import {
 	Body,
 	ClassSerializerInterceptor,
 	Controller,
+	Delete,
 	Get,
 	Param,
 	Put,
@@ -35,5 +36,10 @@ export class UsersController {
 	@Put(':id')
 	updateById(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
 		return this.usersService.update(Number(id), updateUserDto);
+	}
+
+	@Delete(':id')
+	delete(@Param('id') id: string) {
+		return this.usersService.delete(Number(id));
 	}
 }
