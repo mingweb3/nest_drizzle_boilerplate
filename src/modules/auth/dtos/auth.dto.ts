@@ -44,9 +44,3 @@ export class SigninDto {
 	})
 	password: string;
 }
-
-export class RefreshTokenDto {
-	@IsNotEmpty()
-	@IsString()
-	refreshToken: string;
-}

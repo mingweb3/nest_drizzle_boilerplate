@@ -8,8 +8,9 @@ import {
 	UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RefreshTokenDto, SigninDto, SignupDto } from './dtos/auth.dto';
+import { SigninDto, SignupDto } from './dtos/auth.dto';
 import { AccessTokenGuard } from 'src/guards/accessToken.guard';
+import { RefreshTokenGuard } from 'src/guards/refreshToken.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -33,8 +34,11 @@ export class AuthController {
 		return this.authService.logout(authToken);
 	}
 
-	@Post('/refresh-token')
-	refreshToken(@Body() body: RefreshTokenDto) {
-		return this.authService.refreshToken(body);
+	@UseGuards(RefreshTokenGuard)
+	@Get('refresh')
+	refreshToken(@Req() req: Request) {
+		if (!req.headers['authorization']) throw new UnauthorizedException();
+		const authToken = req.headers['authorization'].split(' ')[1];
+		return this.authService.refreshToken(authToken);
 	}
 }

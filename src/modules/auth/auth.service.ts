@@ -1,5 +1,6 @@
 import {
 	BadRequestException,
+	ForbiddenException,
 	HttpException,
 	Inject,
 	Injectable,
@@ -8,8 +9,12 @@ import { eq } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '@db/schema';
 import * as argon2 from 'argon2';
-import PG_CONNECTION, { secret } from '@utils/urls';
-import { RefreshTokenDto, SigninDto, SignupDto } from './dtos/auth.dto';
+import PG_CONNECTION, {
+	accessTokenExpire,
+	refreshTokenExpire,
+	secret,
+} from '@utils/app.config';
+import { SigninDto, SignupDto } from './dtos/auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '@modules/users/users.service';
 
@@ -82,14 +87,28 @@ export class AuthService {
 		return { status: 'ok' };
 	}
 
-	async refreshToken({ refreshToken }: RefreshTokenDto) {
+	async refreshToken(refreshToken: string) {
 		const tokenObj = this.jwtService.verify(refreshToken, { secret });
-		if (!tokenObj.id) throw new HttpException('User does not exist', 400);
+		if (!tokenObj.id) throw new ForbiddenException('Access Denied');
 
+		const userExists = await this.db
+			.select()
+			.from(schema.users)
+			.where(eq(schema.users.id, tokenObj.id));
+		if (!userExists.length || !userExists[0].refreshToken)
+			throw new ForbiddenException('Access Denied');
+
+		const refreshTokenMatches = await argon2.verify(
+			userExists[0].refreshToken,
+			refreshToken,
+		);
+
+		if (!refreshTokenMatches) throw new ForbiddenException('Access Denied');
 		const tokens = await this.getTokens(tokenObj.id, tokenObj.email);
 		await this.updateRefreshToken(tokenObj.id, tokens.refreshToken);
 		return tokens;
 	}
+
 	/**
 	 * PRIVATE FUNCTIONS
 	 */
@@ -121,7 +140,7 @@ export class AuthService {
 				},
 				{
 					secret,
-					expiresIn: '1m',
+					expiresIn: accessTokenExpire,
 				},
 			),
 			this.jwtService.signAsync(
@@ -131,7 +150,7 @@ export class AuthService {
 				},
 				{
 					secret,
-					expiresIn: '2m',
+					expiresIn: refreshTokenExpire,
 				},
 			),
 		]);

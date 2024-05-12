@@ -6,4 +6,6 @@ export const envVarsSchema: Joi.ObjectSchema = Joi.object({
 		.default('development'),
 	PORT: Joi.number().default(3333),
 	DATABASE_URI: Joi.string().required(),
+	ACCESS_TOKEN_EXPIRATION: Joi.string().required(),
+	REFRESH_TOKEN_EXPIRATION: Joi.string().required(),
 });
