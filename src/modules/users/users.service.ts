@@ -4,6 +4,7 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '@db/schema';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { eq } from 'drizzle-orm';
+import { UserEntity } from './entites/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -12,14 +13,11 @@ export class UsersService {
 		@Inject(PG_CONNECTION) private db: NodePgDatabase<typeof schema>,
 	) {}
 
-	async findAll() {
+	async findAll(): Promise<UserEntity[]> {
 		const pageSize = 2;
 		const page = 1;
 
 		const users = this.db.query.users.findMany({
-			with: {
-				profile: true,
-			},
 			orderBy: (users, { desc }) => desc(users.id),
 			limit: pageSize,
 			offset: pageSize * (page - 1),
@@ -28,8 +26,11 @@ export class UsersService {
 		return users;
 	}
 
-	async findOne(id: number) {
+	async findOne(id: number): Promise<UserEntity> {
 		const user = await this.db.query.users.findFirst({
+			with: {
+				profile: true,
+			},
 			columns: {
 				password: false,
 			},
@@ -41,13 +42,14 @@ export class UsersService {
 	async update(id: number, updateUserDto: UpdateUserDto) {
 		const userExists = this.findOne(id);
 		if (!userExists) {
-			throw new BadRequestException(`NO user to update`);
+			throw new BadRequestException(`no user exists`);
 		}
-		const updatedUser = this.db
+
+		this.db
 			.update(this.userTable)
 			.set(updateUserDto)
 			.where(eq(this.userTable.id, id));
 
-		return updatedUser;
+		return { status: 'updated' };
 	}
 }
