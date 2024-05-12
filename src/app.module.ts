@@ -8,6 +8,7 @@ import { DbModule } from './db/db.module';
 import { CommonModule } from './modules/common/common.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from '@modules/users/users.module';
+import { ProfileModule } from '@modules/profile/profile.module';
 
 @Module({
 	imports: [
@@ -15,6 +16,7 @@ import { UsersModule } from '@modules/users/users.module';
 		CommonModule,
 		AuthModule,
 		UsersModule,
+		ProfileModule,
 		ConfigModule.forRoot({
 			isGlobal: true,
 			envFilePath:
