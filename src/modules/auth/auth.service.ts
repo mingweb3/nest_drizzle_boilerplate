@@ -1,85 +1,144 @@
 import {
-  BadRequestException,
-  HttpException,
-  Inject,
-  Injectable,
+	BadRequestException,
+	HttpException,
+	Inject,
+	Injectable,
 } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '@db/schema';
-import * as bcrypt from 'bcryptjs';
-import * as jwt from 'jsonwebtoken';
+import * as argon2 from 'argon2';
 import PG_CONNECTION, { secret } from '@utils/urls';
-
-interface ISignUp {
-  email: string;
-  password: string;
-  username: string;
-}
-
-interface ISignIn {
-  email: string;
-  password: string;
-}
+import { RefreshTokenDto, SigninDto, SignupDto } from './dtos/auth.dto';
+import { JwtService } from '@nestjs/jwt';
+import { UsersService } from '@modules/users/users.service';
 
 @Injectable()
 export class AuthService {
-  constructor(
-    @Inject(PG_CONNECTION) private db: NodePgDatabase<typeof schema>,
-  ) {}
+	constructor(
+		@Inject(PG_CONNECTION) private db: NodePgDatabase<typeof schema>,
+		private jwtService: JwtService,
+		private usersService: UsersService,
+	) {}
 
-  async findAll() {
-    const users = this.db.select().from(schema.users);
-    return users;
-  }
+	async findAll() {
+		const users = this.db.select().from(schema.users);
+		return users;
+	}
 
-  async signup({ email, password, username }: ISignUp) {
-    const userExists = await this.db
-      .select()
-      .from(schema.users)
-      .where(eq(schema.users.email, email));
+	async signup({ email, password, username }: SignupDto) {
+		const userExists = await this.db
+			.select()
+			.from(schema.users)
+			.where(eq(schema.users.email, email));
 
-    if (userExists.length > 0) {
-      throw new BadRequestException(`User exists`);
-    } else {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const user = await this.db
-        .insert(schema.users)
-        .values({ email, password: hashedPassword, username });
+		if (userExists.length > 0) {
+			throw new BadRequestException(`Your data is invalid!`);
+		}
 
-      return { token: this.generateToken(email, user.oid.toString()) };
-    }
-  }
+		// Hash password
+		const hashedPassword = await this.hashData(password);
 
-  async signin({ email, password }: ISignIn) {
-    const userExists = await this.db
-      .select()
-      .from(schema.users)
-      .where(eq(schema.users.email, email));
+		const user = await this.db
+			.insert(schema.users)
+			.values({ email, password: hashedPassword, username });
 
-    if (userExists.length > 0) {
-      const isValidPassword = await bcrypt.compare(
-        password,
-        userExists[0].password,
-      );
+		const tokens = await this.getTokens(user.oid, email);
+		await this.updateRefreshToken(user.oid.toString(), tokens.refreshToken);
+		return tokens;
+	}
 
-      if (!isValidPassword)
-        throw new HttpException('Invalid username or password', 400);
-      else {
-        return {
-          user: userExists[0],
-          token: this.generateToken(email, userExists[0]?.id.toString()),
-        };
-      }
-    } else {
-      throw new HttpException('User does not exist', 400);
-    }
-  }
+	async signin({ email, password }: SigninDto) {
+		const userExists = await this.db
+			.select()
+			.from(schema.users)
+			.where(eq(schema.users.email, email));
 
-  private generateToken(email: string, id: string) {
-    const token = jwt.sign({ email, id }, secret, {
-      expiresIn: 2 * 3600, // 2 days
-    });
-    return token;
-  }
+		if (userExists.length > 0) {
+			const isValidPassword = await argon2.verify(
+				userExists[0].password,
+				password,
+			);
+
+			if (!isValidPassword)
+				throw new HttpException('Invalid username or password', 400);
+
+			const tokens = await this.getTokens(
+				userExists[0].id,
+				userExists[0].email,
+			);
+			await this.updateRefreshToken(userExists[0].id, tokens.refreshToken);
+			return tokens;
+		} else {
+			throw new HttpException('User does not exist', 400);
+		}
+	}
+
+	async logout(token: string) {
+		const tokenObj = this.jwtService.verify(token, { secret });
+		if (!tokenObj.id) throw new HttpException('User does not exist', 400);
+
+		await this.updateRefreshToken(Number(tokenObj.id), null);
+		return { status: 'ok' };
+	}
+
+	async refreshToken({ refreshToken }: RefreshTokenDto) {
+		const tokenObj = this.jwtService.verify(refreshToken, { secret });
+		if (!tokenObj.id) throw new HttpException('User does not exist', 400);
+
+		const tokens = await this.getTokens(tokenObj.id, tokenObj.email);
+		await this.updateRefreshToken(tokenObj.id, tokens.refreshToken);
+		return tokens;
+	}
+	/**
+	 * PRIVATE FUNCTIONS
+	 */
+	private hashData(data: string) {
+		return argon2.hash(data);
+	}
+
+	private async updateRefreshToken(userId: number, refreshToken?: string) {
+		if (!refreshToken) {
+			await this.usersService.update(userId, {
+				refreshToken: null,
+			});
+			return;
+		}
+
+		const hashedRefreshToken = await this.hashData(refreshToken);
+		await this.usersService.update(userId, {
+			refreshToken: hashedRefreshToken,
+		});
+		return;
+	}
+
+	private async getTokens(id: number, email: string) {
+		const [accessToken, refreshToken] = await Promise.all([
+			this.jwtService.signAsync(
+				{
+					id,
+					email,
+				},
+				{
+					secret,
+					expiresIn: '1m',
+				},
+			),
+			this.jwtService.signAsync(
+				{
+					id,
+					email,
+				},
+				{
+					secret,
+					expiresIn: '2m',
+				},
+			),
+		]);
+
+		return {
+			accessToken,
+			refreshToken,
+		};
+	}
 }

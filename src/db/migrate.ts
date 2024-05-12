@@ -5,15 +5,15 @@ import { ConfigService } from '@nestjs/config';
 import { DatabaseConfig } from '@config/config.service';
 
 async function migrate(configService: ConfigService) {
-  const dbConfig = configService.get<DatabaseConfig>('database');
-  const client = postgres(dbConfig.uri, { max: 1 });
+	const dbConfig = configService.get<DatabaseConfig>('database');
+	const client = postgres(dbConfig.uri, { max: 1 });
 
-  const db = drizzle(client);
-  await NodePgMigrate(db, {
-    migrationsFolder: 'migrations',
-  });
+	const db = drizzle(client);
+	await NodePgMigrate(db, {
+		migrationsFolder: 'migrations',
+	});
 
-  await client.end();
+	await client.end();
 }
 
 migrate(new ConfigService());

@@ -1,22 +1,52 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import {
+	IsEmail,
+	IsNotEmpty,
+	IsOptional,
+	IsString,
+	Matches,
+	MaxLength,
+	MinLength,
+} from 'class-validator';
 
 export class SignupDto {
-  @IsEmail()
-  email: string;
+	@IsNotEmpty()
+	@IsEmail()
+	email: string;
 
-  @IsString()
-  @MinLength(5)
-  password: string;
+	@IsNotEmpty()
+	@IsString()
+	@MinLength(5)
+	@MaxLength(30)
+	@Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
+		message: 'password too weak',
+	})
+	password: string;
 
-  @IsString()
-  username: string;
+	@IsOptional()
+	@IsString()
+	@Matches(/^\w+$/, {
+		message: 'no space between words',
+	})
+	username: string;
 }
 
 export class SigninDto {
-  @IsEmail()
-  email: string;
+	@IsNotEmpty()
+	@IsEmail()
+	email: string;
 
-  @IsString()
-  @MinLength(5)
-  password: string;
+	@IsNotEmpty()
+	@IsString()
+	@MinLength(5)
+	@MaxLength(30)
+	@Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
+		message: 'password invalid',
+	})
+	password: string;
+}
+
+export class RefreshTokenDto {
+	@IsNotEmpty()
+	@IsString()
+	refreshToken: string;
 }

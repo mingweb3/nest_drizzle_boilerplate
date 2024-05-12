@@ -10,27 +10,27 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from '@modules/users/users.module';
 
 @Module({
-  imports: [
-    DbModule,
-    CommonModule,
-    AuthModule,
-    UsersModule,
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath:
-        process.env.NODE_ENV === 'development'
-          ? '.env.development.local'
-          : '.env',
-      load: [appConfigService],
-      validationSchema: envVarsSchema,
-      validationOptions: {
-        abortEarly: false,
-      },
-      cache: true,
-      expandVariables: true,
-    }),
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+	imports: [
+		DbModule,
+		CommonModule,
+		AuthModule,
+		UsersModule,
+		ConfigModule.forRoot({
+			isGlobal: true,
+			envFilePath:
+				process.env.NODE_ENV === 'development'
+					? '.env.development.local'
+					: '.env',
+			load: [appConfigService],
+			validationSchema: envVarsSchema,
+			validationOptions: {
+				abortEarly: false,
+			},
+			cache: true,
+			expandVariables: true,
+		}),
+	],
+	controllers: [AppController],
+	providers: [AppService],
 })
 export class AppModule {}
