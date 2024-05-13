@@ -6,6 +6,8 @@ import {
 	text,
 	integer,
 	timestamp,
+	bigserial,
+	bigint,
 } from 'drizzle-orm/pg-core';
 
 // BOOKS TABLE
@@ -55,3 +57,20 @@ export const userRelations = relations(users, ({ one, many }) => ({
 		references: [profiles.userId],
 	}),
 }));
+
+// MEDIA
+export const medias = pgTable('Medias', {
+	id: bigserial('id', { mode: 'number' }).primaryKey(),
+	name: varchar('name'),
+	url: text('url'),
+	path: text('path'),
+	ownerId: bigint('userId', { mode: 'number' }),
+	mediaObjType: varchar('media_obj_type', { length: 256 }),
+	mediaObjId: bigint('media_obj_id', { mode: 'number' }),
+	mediaProperty: varchar('media_obj_property', { length: 256 }),
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at')
+		.notNull()
+		.defaultNow()
+		.$onUpdate(() => new Date()),
+});
