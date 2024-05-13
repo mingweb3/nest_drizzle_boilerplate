@@ -1,7 +1,10 @@
 import {
 	Controller,
 	Delete,
+	FileTypeValidator,
+	MaxFileSizeValidator,
 	Param,
+	ParseFilePipe,
 	Post,
 	UploadedFile,
 	UseGuards,
@@ -22,7 +25,14 @@ export class MediaController {
 	@UseInterceptors(FileInterceptor('file'))
 	async upload(
 		@User(UserProperties.USER_ID) userId: number,
-		@UploadedFile()
+		@UploadedFile(
+			new ParseFilePipe({
+				validators: [
+					new FileTypeValidator({ fileType: 'image/jpeg|image/png' }),
+					new MaxFileSizeValidator({ maxSize: 528000 }),
+				],
+			}),
+		)
 		file: Express.Multer.File,
 	) {
 		return this.mediaService.upload(userId, file);

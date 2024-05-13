@@ -45,6 +45,7 @@ export const profiles = pgTable('Profiles', {
 	id: serial('id').primaryKey(),
 	name: varchar('name', { length: 256 }),
 	bio: varchar('bio', { length: 256 }),
+	avatar: text('avatar'),
 	userId: integer('user_id')
 		.notNull()
 		.references(() => users.id),
