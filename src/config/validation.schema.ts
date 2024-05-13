@@ -8,4 +8,10 @@ export const envVarsSchema: Joi.ObjectSchema = Joi.object({
 	DATABASE_URI: Joi.string().required(),
 	ACCESS_TOKEN_EXPIRATION: Joi.string().required(),
 	REFRESH_TOKEN_EXPIRATION: Joi.string().required(),
+	// AWS S3
+	S3_ACCESS_KEY_ID: Joi.string().required(),
+	S3_SECRET_ACCESS_KEY: Joi.string().required(),
+	S3_BUCKET_NAME: Joi.string().required(),
+	S3_URL: Joi.string().required(),
+	S3_REGION: Joi.string().required(),
 });
