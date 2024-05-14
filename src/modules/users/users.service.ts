@@ -27,7 +27,7 @@ export class UsersService {
 	}
 
 	async findOne(id: number): Promise<UserEntity> {
-		const user = await this.db.query.users.findFirst({
+		const result = await this.db.query.users.findFirst({
 			with: {
 				profile: true,
 			},
@@ -36,7 +36,12 @@ export class UsersService {
 			},
 			where: (users, { eq }) => eq(users.id, id),
 		});
-		return user;
+
+		if (!result) {
+			return null;
+		}
+
+		return result;
 	}
 
 	async update(id: number, updateUserDto: UpdateUserDto) {
@@ -60,7 +65,6 @@ export class UsersService {
 				.where(eq(schema.profiles.userId, id));
 			await this.db.delete(this.userTable).where(eq(this.userTable.id, id));
 		} catch (e) {
-			console.log(e);
 			throw new BadRequestException(`Your data is invalid!`);
 		}
 		return { status: 'deleted' };

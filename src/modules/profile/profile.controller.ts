@@ -12,12 +12,14 @@ import { AccessTokenGuard } from 'src/guards/accessToken.guard';
 import { ProfileService } from './profile.service';
 import { User } from 'src/common/decorators/user.decorator';
 import { UserProperties } from '@modules/auth/auth.constants';
+import { SelfGuard } from 'src/guards/self.guard';
 
 @UseGuards(AccessTokenGuard)
 @Controller('profile')
 export class ProfileController {
 	constructor(private readonly profileService: ProfileService) {}
 
+	@UseGuards(SelfGuard)
 	@Post()
 	createProfile(
 		@User(UserProperties.USER_ID) userId: number,
@@ -26,13 +28,13 @@ export class ProfileController {
 		return this.profileService.createProfile(userId, body);
 	}
 
-	@Put(':id')
+	@UseGuards(SelfGuard)
+	@Put()
 	updateProfile(
 		@User(UserProperties.USER_ID) userId: number,
-		@Param('id') id: string,
 		@Body() body: UpdateProfileDto,
 	) {
-		return this.profileService.updateProfile(userId, Number(id), body);
+		return this.profileService.updateProfile(userId, body);
 	}
 
 	@Get('/user/:userId')

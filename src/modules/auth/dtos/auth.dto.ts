@@ -1,7 +1,6 @@
 import {
 	IsEmail,
 	IsNotEmpty,
-	IsOptional,
 	IsString,
 	Matches,
 	MaxLength,
@@ -22,7 +21,7 @@ export class SignupDto {
 	})
 	password: string;
 
-	@IsOptional()
+	@IsNotEmpty()
 	@IsString()
 	@Matches(/^\w+$/, {
 		message: 'no space between words',

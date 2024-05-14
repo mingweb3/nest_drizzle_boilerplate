@@ -49,7 +49,7 @@ export class AuthService {
 			.values({ email, password: hashedPassword, username })
 			.returning();
 
-		const tokens = await this.getTokens(user[0].id, email);
+		const tokens = await this.getTokens(user[0].id, username);
 		await this.updateRefreshToken(user[0].id, tokens.refreshToken);
 		return tokens;
 	}
@@ -71,7 +71,7 @@ export class AuthService {
 
 			const tokens = await this.getTokens(
 				userExists[0].id,
-				userExists[0].email,
+				userExists[0].username,
 			);
 			await this.updateRefreshToken(userExists[0].id, tokens.refreshToken);
 			return tokens;
@@ -132,12 +132,12 @@ export class AuthService {
 		return;
 	}
 
-	private async getTokens(id: number, email: string) {
+	private async getTokens(id: number, name: string) {
 		const [accessToken, refreshToken] = await Promise.all([
 			this.jwtService.signAsync(
 				{
 					id,
-					email,
+					name,
 				},
 				{
 					secret,
@@ -147,7 +147,7 @@ export class AuthService {
 			this.jwtService.signAsync(
 				{
 					id,
-					email,
+					name,
 				},
 				{
 					secret,
